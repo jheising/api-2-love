@@ -67,6 +67,8 @@ export const Get = _generateHTTPMethodDecorator("GET");
 export const Put = _generateHTTPMethodDecorator("PUT");
 export const Patch = _generateHTTPMethodDecorator("PATCH");
 export const Delete = _generateHTTPMethodDecorator("DELETE");
+export const Options = _generateHTTPMethodDecorator("OPTIONS");
+export const Head = _generateHTTPMethodDecorator("HEAD");
 
 export const Param = (requirements: InputParameterRequirement) => {
     return _generateParameterDecorator(requirements);
@@ -74,6 +76,7 @@ export const Param = (requirements: InputParameterRequirement) => {
 
 export const Body = _generateParameterSourceDecorator("body");
 export const AllBody = _generateParameterSourceDecorator("body", true);
+export const WholeBody = AllBody;
 
 export const Query = _generateParameterSourceDecorator("query");
 export const AllQuery = _generateParameterSourceDecorator("query", true);
@@ -86,6 +89,10 @@ export const AllHeaders = _generateParameterSourceDecorator("headers", true);
 
 export const Optional = _generateParameterDecorator({
     required: false
+});
+
+export const Required = _generateParameterDecorator({
+    required: true
 });
 
 export const Use = (middleware: API2LoveRequestHandler | API2LoveRequestHandler[]) => {

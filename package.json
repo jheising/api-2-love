@@ -5,12 +5,13 @@
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "scripts": {
-    "build": "rm -Rf ./build && tsc -p ."
+    "build": "rm -Rf ./lib && tsc -p .",
+    "prepare": "npm run build"
   },
   "files": [
     "./lib/**/*"
   ],
-  "author": "",
+  "author": "Jim Heising <jheising@gmail.com>",
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.20.0",
