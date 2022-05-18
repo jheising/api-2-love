@@ -1,7 +1,7 @@
 {
   "name": "api-2-love",
-  "version": "1.0.0",
-  "description": "",
+  "version": "0.1.0",
+  "description": "The easiest way to create an API to love.",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "scripts": {
@@ -33,6 +33,7 @@
     "esbuild": "^0.14.38",
     "glob": "^8.0.1",
     "ts-node": "^10.7.0",
+    "ts-node-dev": "^1.1.8",
     "typescript": "^4.6.4",
     "yargs": "^17.4.1"
   }
