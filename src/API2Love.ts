@@ -16,6 +16,8 @@ import isNil from "lodash/isNil";
 import isArray from "lodash/isArray";
 import {Route, Utils} from "./Utils";
 import {ErrorRequestHandler} from "express-serve-static-core";
+import cors from "cors";
+import wcmatch from "wildcard-match";
 
 export interface API2LoveRequestLocals {
     logger: Logger;
@@ -38,13 +40,19 @@ export interface API2LoveConfig {
     loadStandardMiddleware?: boolean;
 
     /**
+     * List of CORS origins that will be allowed in the request. Wildcards supported.
+     */
+    corsWhitelist?: string[];
+
+    /**
      * Pass in an existing express app instance.
      */
     app?: Express;
+
     logLevel?: LogLevelDesc;
 
     /**
-     * Specify a handler function if you want add any additional information to the logging context for a request. Just modify the passed `context` object with your own data.
+     * Specify a handler function if you want to add any additional information to the logging context for a request. Just modify the passed `context` object with your own data.
      * @param req - The express.js request
      * @param context - The context object you can modify with your own data
      */
@@ -120,6 +128,16 @@ export class API2Love {
             next();
         });
 
+        if (config.corsWhitelist) {
+            const isMatch = wcmatch(config.corsWhitelist);
+            this.app.use(cors({
+                origin: (requestOrigin, callback) => {
+                    const isAllowedOrigin = !!requestOrigin && isMatch(requestOrigin);
+                    callback(null, isAllowedOrigin);
+                }
+            }));
+        }
+
         if (config.loadStandardMiddleware) {
             this.app.use(cookieParser());
             this.app.use(bodyParser.urlencoded({
@@ -144,6 +162,11 @@ export class API2Love {
 
                 if (module.default) {
                     module = module.default;
+                }
+
+                if (!module) {
+                    API2Love.throwNotFoundError();
+                    return;
                 }
 
                 const handler = API2Love._getManagedHandler(module, req.method);

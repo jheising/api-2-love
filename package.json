@@ -1,6 +1,6 @@
 {
   "name": "api-2-love",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "The easiest way to create an API to love.",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
@@ -16,16 +16,19 @@
   "dependencies": {
     "body-parser": "^1.20.0",
     "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
     "express": "^4.18.1",
     "function-arguments": "^1.0.9",
     "is-lambda": "^1.0.1",
     "lodash": "^4.17.21",
     "loglevel": "^1.8.0",
     "nanoid": "^3.3.4",
-    "serverless-http": "^3.0.1"
+    "serverless-http": "^3.0.1",
+    "wildcard-match": "^5.1.2"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.95",
+    "@types/cors": "^2.8.12",
     "@types/express": "^4.17.13",
     "@types/lodash": "^4.14.182",
     "@types/node": "^17.0.31",
