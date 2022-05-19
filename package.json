@@ -9,7 +9,7 @@
     "prepare": "npm run build"
   },
   "files": [
-    "./lib/**/*"
+    "lib/**/*"
   ],
   "author": "Jim Heising <jheising@gmail.com>",
   "license": "ISC",
