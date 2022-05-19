@@ -1,16 +1,20 @@
 {
   "name": "api-2-love",
-  "version": "0.1.2",
+  "version": "0.1.5",
   "description": "The easiest way to create an API to love.",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
+  "repository": "https://github.com/jheising/api-2-love",
   "scripts": {
     "build": "rm -Rf ./lib && tsc -p .",
-    "prepare": "npm run build",
-    "postinstall": "npm run build"
+    "prepare": "npm run build"
+  },
+  "bin": {
+    "a2ldev": "scripts/dev.sh"
   },
   "files": [
-    "lib/**/*"
+    "lib/**/*",
+    "scripts/dev-server.ts"
   ],
   "author": "Jim Heising <jheising@gmail.com>",
   "license": "ISC",
