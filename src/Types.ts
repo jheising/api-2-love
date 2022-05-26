@@ -1,5 +1,5 @@
 import {Logger} from "loglevel";
-import {RequestHandler, Response} from "express/ts4.0";
+import {RequestHandler, Request, Response} from "express/ts4.0";
 import {Route} from "./Utils";
 
 export interface InputParameterRequirement {
@@ -24,12 +24,14 @@ export interface ManagedAPIHandlerConfig {
 
 export type InputParameterRequirements = { [paramName: string]: InputParameterRequirement };
 export type ManagedAPIHandler = [ManagedAPIHandlerConfig, Function];
+export type API2LoveLogger = Logger;
 
 export interface API2LoveRequestLocals {
-    logger: Logger;
+    logger: API2LoveLogger;
     [x: string | number | symbol]: unknown;
 }
 
+export type API2LoveRequest = Request<any, any, any, any, API2LoveRequestLocals>;
 export type API2LoveResponse = Response<any, API2LoveRequestLocals>;
 export type API2LoveRequestHandler = RequestHandler<any, any, any, any, API2LoveRequestLocals>;
 export type API2LoveRoute = Route;

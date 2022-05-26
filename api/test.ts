@@ -1,4 +1,12 @@
-import {Post, Optional, Query, Use, UseAPIKeyAuth, WholeBody, FormatResponse} from "../src";
+import {
+    Post,
+    Optional,
+    Query,
+    Use,
+    UseAPIKeyAuth,
+    WholeBody,
+    Logger, API2LoveLogger
+} from "../src";
 
 export default class TestAPI {
     @Post
@@ -9,14 +17,16 @@ export default class TestAPI {
     @UseAPIKeyAuth({
         apiKeys: ["1", "2"]
     })
-    @FormatResponse((value) => value, "text/plain")
     static getTest(
         @Query
         @Optional
             input: string,
+        @Logger
+            logger: API2LoveLogger,
         @WholeBody
             body: string
     ) {
-        return "hello";
+        logger.log(`Hello world!`);
+        return input;
     }
 }

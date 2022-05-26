@@ -7,7 +7,7 @@ import path from "path";
 import isLambda from "is-lambda";
 import {APIGatewayProxyHandler} from "aws-lambda";
 import {Server} from "http";
-import {Express, Request, Response, NextFunction, RequestHandler} from "express/ts4.0";
+import {Express, Request, Response, NextFunction} from "express/ts4.0";
 import log, {Logger, LogLevelDesc} from "loglevel";
 import {nanoid} from "nanoid";
 import get from "lodash/get";
@@ -311,17 +311,22 @@ export class API2Love {
         return theObject;
     }
 
-    private static _processInputParams(req: Request, requirements: InputParameterRequirements): { [paramName: string]: any } {
+    private static _processInputParams(req: Request, res: Response, requirements: InputParameterRequirements): { [paramName: string]: any } {
         const output: any = {};
 
         Object.entries(requirements).forEach(([paramName, requirement]) => {
             let paramValue;
-            const inputSources = requirement.sources ?? [["params", paramName], ["query", paramName], ["body", paramName]];
 
-            const foundPath = inputSources.find(path => has(req, path));
+            const inputSource = {
+                request: req,
+                response: res
+            };
+
+            const inputSourcePaths = requirement.sources ?? [["request", "params", paramName], ["request", "query", paramName], ["request", "body", paramName]];
+            const foundPath = inputSourcePaths.find(path => has(inputSource, path));
 
             if (foundPath) {
-                paramValue = get(req, foundPath);
+                paramValue = get(inputSource, foundPath);
 
                 if (requirement.autoConvert !== false) {
                     // Can we parse this value and turn it into a typed value?
@@ -393,7 +398,7 @@ export class API2Love {
                 }
             }
 
-            const inputParameters = API2Love._processInputParams(req, handlerConfig.params);
+            const inputParameters = API2Love._processInputParams(req, res, handlerConfig.params);
             const inputArgs = handlerArgNames.map(argName => inputParameters[argName]);
 
             result = await handlerFunction.apply(null, inputArgs);

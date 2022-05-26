@@ -5,6 +5,7 @@ import {generateRoutes, walkTree} from "./file-router/lib";
 import path from "path";
 import isArray from "lodash/isArray";
 import {InputParameterRequirement, ManagedAPIHandlerConfig} from "./Types";
+import castArray from "lodash/castArray";
 
 export interface Route {
     /**
@@ -16,7 +17,7 @@ export interface Route {
 
 export class Utils {
 
-    static mergeObjects(...values:any[]) {
+    static mergeObjects(...values: any[]) {
         // @ts-ignore
         mergeWith(...values, (objValue, srcValue) => {
             if (isArray(objValue)) {
@@ -93,11 +94,11 @@ export class Utils {
         }
     }
 
-    static generateParameterSourceDecorator(baseSource: string, includeFullSource: boolean = false, autoConvert: boolean = true): (target: Object, propertyKey: string | symbol, parameterIndex: number) => void {
+    static generateParameterSourceDecorator(baseSource: string | string[], includeFullSource: boolean = false, autoConvert: boolean = true): (target: Object, propertyKey: string | symbol, parameterIndex: number) => void {
         return (target: Object, propertyKey: string | symbol, parameterIndex: number) => {
             const [handlerFunction, parameterName] = Utils.getHandlerAndParameterName(target, propertyKey, parameterIndex);
 
-            const source = [baseSource];
+            const source = castArray(baseSource);
 
             if (!includeFullSource) {
                 source.push(parameterName);
