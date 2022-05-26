@@ -21,6 +21,7 @@ import wcmatch from "wildcard-match";
 
 export interface API2LoveRequestLocals {
     logger: Logger;
+    [x: string | number | symbol]: unknown;
 }
 
 export type API2LoveResponse = Response<any, API2LoveRequestLocals>;
@@ -69,6 +70,7 @@ export interface API2LoveConfig {
 export interface APIFriendlyError extends Error {
     statusCode: number;
     friendlyMessage?: string;
+    id: string;
 }
 
 export interface InputParameterRequirement {
@@ -83,7 +85,6 @@ export interface ManagedAPIHandlerConfig {
 
 export type InputParameterRequirements = { [paramName: string]: InputParameterRequirement };
 export type ManagedAPIHandler = [ManagedAPIHandlerConfig, Function];
-export type ManagedAPIEndpoint = { [httpMethod: string]: ManagedAPIHandler };
 
 export class API2Love {
 
@@ -216,11 +217,24 @@ export class API2Love {
             friendlyError.friendlyMessage = friendlyMessage;
         }
         friendlyError.statusCode = statusCode;
+        friendlyError.id = nanoid();
         return friendlyError;
     }
 
+    static createNotFoundError(): APIFriendlyError {
+        return API2Love.createAPIFriendlyError("Not found", 404);
+    }
+
+    static createUnauthorizedError(rawError?: Error): APIFriendlyError {
+        return API2Love.createAPIFriendlyError("Unauthorized", 401, rawError);
+    }
+
     static throwNotFoundError() {
-        API2Love.throwAPIError("Not found", 404);
+        throw API2Love.createNotFoundError();
+    }
+
+    static throwUnauthorizedError(rawError?: Error) {
+        throw API2Love.createUnauthorizedError(rawError);
     }
 
     static throwAPIError(friendlyMessage?: string, statusCode: number = 500, rawError?: Error) {
