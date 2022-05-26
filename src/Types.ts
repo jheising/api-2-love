@@ -7,7 +7,7 @@ export interface InputParameterRequirement {
 
     /**
      * Try to convert values into typed values, like numbers, objects, arrays, etc.
-     * @default true
+     * @default false
      */
     autoConvert?: boolean;
     sources?: (string | string[])[];

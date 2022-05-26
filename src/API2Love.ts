@@ -332,7 +332,7 @@ export class API2Love {
             if (foundPath) {
                 paramValue = get(inputSource, foundPath);
 
-                if (requirement.autoConvert !== false) {
+                if (requirement.autoConvert) {
                     // Can we parse this value and turn it into a typed value?
                     try {
                         paramValue = JSON.parse(paramValue);

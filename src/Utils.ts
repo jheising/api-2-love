@@ -93,7 +93,7 @@ export class Utils {
         }
     }
 
-    static generateParameterSourceDecorator(baseSource: string | string[], includeFullSource: boolean = false, autoConvert: boolean = true): (target: Object, propertyKey: string | symbol, parameterIndex: number) => void {
+    static generateParameterSourceDecorator(baseSource: string | string[], includeFullSource: boolean = false, autoConvert: boolean = false): (target: Object, propertyKey: string | symbol, parameterIndex: number) => void {
         return (target: Object, propertyKey: string | symbol, parameterIndex: number) => {
             const [handlerFunction, parameterName] = Utils.getHandlerAndParameterName(target, propertyKey, parameterIndex);
 
