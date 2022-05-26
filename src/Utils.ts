@@ -98,10 +98,10 @@ export class Utils {
         return (target: Object, propertyKey: string | symbol, parameterIndex: number) => {
             const [handlerFunction, parameterName] = Utils.getHandlerAndParameterName(target, propertyKey, parameterIndex);
 
-            const source = castArray(baseSource);
+            let source = castArray(baseSource);
 
             if (!includeFullSource) {
-                source.push(parameterName);
+                source = [...source, parameterName];
             }
 
             Utils.setManagedAPIHandlerConfig(handlerFunction, {

@@ -1,12 +1,13 @@
 {
   "name": "api-2-love",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "description": "The easiest way to create an API to love.",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "repository": "https://github.com/jheising/api-2-love",
   "scripts": {
     "dev": "LOG_LEVEL=debug ts-node-dev --watch ./api --transpile-only ./scripts/dev-server.ts",
+    "debug": "LOG_LEVEL=debug ts-node ./scripts/dev-server.ts",
     "build": "rm -Rf ./lib && tsc -p .",
     "prepare": "npm run build"
   },

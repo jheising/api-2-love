@@ -5,11 +5,13 @@ import {
     Use,
     UseAPIKeyAuth,
     WholeBody,
+    Path,
+    Put,
     Logger, API2LoveLogger
-} from "../src";
+} from "../../../../src";
 
 export default class TestAPI {
-    @Post
+    @Put
     @Use((req, res, next) => {
         res.locals.blah = "blah";
         next();
@@ -18,15 +20,13 @@ export default class TestAPI {
         apiKeys: ["1", "2"]
     })
     static getTest(
-        @Query
-        @Optional
-            input: string,
-        @Logger
-            logger: API2LoveLogger,
-        @WholeBody
-            body: string
+        @Path
+            namespace: string,
+        @Path
+            filename: string,
+        // @WholeBody
+        //     body: string
     ) {
-        logger.log(`Hello world!`);
-        return input;
+        return filename;
     }
 }
