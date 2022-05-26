@@ -13,7 +13,11 @@ export interface InputParameterRequirement {
     sources?: (string | string[])[];
 }
 
+export type ResponseFormatter = (outputValue: any, statusCode: number) => any;
+
 export interface ManagedAPIHandlerConfig {
+    responseContentType?: string;
+    responseFormatter?: ResponseFormatter;
     middleware?: API2LoveRequestHandler[];
     params?: InputParameterRequirements;
 }
@@ -23,7 +27,6 @@ export type ManagedAPIHandler = [ManagedAPIHandlerConfig, Function];
 
 export interface API2LoveRequestLocals {
     logger: Logger;
-
     [x: string | number | symbol]: unknown;
 }
 

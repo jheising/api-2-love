@@ -1,4 +1,4 @@
-import {Post, Optional, Query, Use, UseAPIKeyAuth, WholeBody} from "../src";
+import {Post, Optional, Query, Use, UseAPIKeyAuth, WholeBody, FormatResponse} from "../src";
 
 export default class TestAPI {
     @Post
@@ -9,13 +9,14 @@ export default class TestAPI {
     @UseAPIKeyAuth({
         apiKeys: ["1", "2"]
     })
+    @FormatResponse((value) => value, "text/plain")
     static getTest(
         @Query
         @Optional
-        input:string,
+            input: string,
         @WholeBody
-        body: string
+            body: string
     ) {
-        return [input, body];
+        return "hello";
     }
 }

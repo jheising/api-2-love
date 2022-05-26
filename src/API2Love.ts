@@ -23,7 +23,7 @@ import {
     API2LoveRoute,
     InputParameterRequirements,
     ManagedAPIHandler,
-    ManagedAPIHandlerConfig
+    ManagedAPIHandlerConfig, ResponseFormatter
 } from "./Types";
 
 
@@ -285,7 +285,7 @@ export class API2Love {
         return newLogger;
     }
 
-    private _formatResponse(response: any, statusCode: number): any {
+    private static _hapiResponseFormatter(response: any, statusCode: number): any {
         if (statusCode <= 299) {
             return {
                 this: "succeeded",
@@ -301,8 +301,8 @@ export class API2Love {
     }
 
 
-    private _sendResponse(res: Response, response: any, statusCode: number = 200) {
-        const formattedResponse = this._formatResponse(response, statusCode);
+    private _sendResponse(res: Response, response: any, statusCode: number = 200, responseFormatter: ResponseFormatter = API2Love._hapiResponseFormatter) {
+        const formattedResponse = responseFormatter(response, statusCode);
         res.status(statusCode).send(formattedResponse);
     }
 
@@ -398,7 +398,11 @@ export class API2Love {
 
             result = await handlerFunction.apply(null, inputArgs);
 
-            this._sendResponse(res, result, res.statusCode ?? 200);
+            if (handlerConfig.responseContentType) {
+                res.contentType(handlerConfig.responseContentType);
+            }
+
+            this._sendResponse(res, result, res.statusCode ?? 200, handlerConfig.responseFormatter);
             next();
         } catch (e: any) {
             next(e);

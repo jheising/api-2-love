@@ -1,6 +1,6 @@
 import {Utils} from "./Utils";
 import castArray from "lodash/castArray";
-import {API2LoveRequestHandler, InputParameterRequirement} from "./Types";
+import {API2LoveRequestHandler, InputParameterRequirement, ResponseFormatter} from "./Types";
 
 export const Post = Utils.generateHTTPMethodDecorator("POST");
 export const Get = Utils.generateHTTPMethodDecorator("GET");
@@ -34,6 +34,13 @@ export const Optional = Utils.generateParameterDecorator({
 export const Required = Utils.generateParameterDecorator({
     required: true
 });
+
+export const FormatResponse = (formatter: ResponseFormatter, contentType?: string) => {
+    return Utils.generateMethodDecorator({
+        responseFormatter: formatter,
+        responseContentType: contentType
+    });
+}
 
 export const Use = (middleware: API2LoveRequestHandler | API2LoveRequestHandler[]) => {
     return Utils.generateMethodDecorator({
