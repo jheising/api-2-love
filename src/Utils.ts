@@ -47,7 +47,6 @@ export class Utils {
     public static generateAPIRoutesFromFiles(rootDirectory: string): Route[] {
         const files = walkTree(rootDirectory);
         return generateRoutes(files)
-            .sort((a, b) => b.priority - a.priority) // Highest priority first
             .map(route => ({
                 endpoint: route.url,
                 file: path.join(route.file.path, route.file.name)

@@ -412,7 +412,6 @@ export class API2Love {
             }
 
             this._sendResponse(res, result, res.statusCode ?? 200, handlerConfig.responseFormatter);
-            next();
         } catch (e: any) {
             next(e);
         }
