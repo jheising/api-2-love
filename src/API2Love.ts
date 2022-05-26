@@ -318,7 +318,11 @@ export class API2Love {
             let paramValue;
 
             const inputSource = {
-                request: req,
+                request: {
+                    ...req,
+                    // Make a copy of the headers so we get by path
+                    headers: {...req.headers}
+                },
                 response: res
             };
 
