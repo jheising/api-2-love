@@ -14,19 +14,18 @@ import get from "lodash/get";
 import has from "lodash/has";
 import isNil from "lodash/isNil";
 import isArray from "lodash/isArray";
-import {Route, Utils} from "./Utils";
+import {Utils} from "./Utils";
 import {ErrorRequestHandler} from "express-serve-static-core";
 import cors from "cors";
 import wcmatch from "wildcard-match";
+import {
+    API2LoveResponse,
+    API2LoveRoute,
+    InputParameterRequirements,
+    ManagedAPIHandler,
+    ManagedAPIHandlerConfig
+} from "./Types";
 
-export interface API2LoveRequestLocals {
-    logger: Logger;
-    [x: string | number | symbol]: unknown;
-}
-
-export type API2LoveResponse = Response<any, API2LoveRequestLocals>;
-export type API2LoveRequestHandler = RequestHandler<any, any, any, any, API2LoveRequestLocals>;
-export type API2LoveRoute = Route;
 
 export interface API2LoveConfig {
 
@@ -72,19 +71,6 @@ export interface APIFriendlyError extends Error {
     friendlyMessage?: string;
     id: string;
 }
-
-export interface InputParameterRequirement {
-    required?: boolean;
-    sources?: (string | string[])[];
-}
-
-export interface ManagedAPIHandlerConfig {
-    middleware?: API2LoveRequestHandler[];
-    params?: InputParameterRequirements;
-}
-
-export type InputParameterRequirements = { [paramName: string]: InputParameterRequirement };
-export type ManagedAPIHandler = [ManagedAPIHandlerConfig, Function];
 
 export class API2Love {
 
@@ -145,6 +131,7 @@ export class API2Love {
                 extended: true,
             }));
             this.app.use(bodyParser.json());
+            this.app.use(bodyParser.text());
         }
 
         let apiRoutes = config.routes;
@@ -336,11 +323,13 @@ export class API2Love {
             if (foundPath) {
                 paramValue = get(req, foundPath);
 
-                // Can we parse this value and turn it into an object?
-                try {
-                    paramValue = JSON.parse(paramValue);
-                } catch (e) {
-                    // ignore
+                if (requirement.autoConvert !== false) {
+                    // Can we parse this value and turn it into a typed value?
+                    try {
+                        paramValue = JSON.parse(paramValue);
+                    } catch (e) {
+                        // ignore
+                    }
                 }
             }
 

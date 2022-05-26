@@ -1,7 +1,7 @@
-import {Get, Optional, Query, Use, UseAPIKeyAuth} from "../src";
+import {Post, Optional, Query, Use, UseAPIKeyAuth, WholeBody} from "../src";
 
 export default class TestAPI {
-    @Get
+    @Post
     @Use((req, res, next) => {
         res.locals.blah = "blah";
         next();
@@ -12,8 +12,10 @@ export default class TestAPI {
     static getTest(
         @Query
         @Optional
-        input:string
+        input:string,
+        @WholeBody
+        body: string
     ) {
-        return {"hello": input};
+        return [input, body];
     }
 }

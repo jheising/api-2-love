@@ -1,8 +1,6 @@
-import {API2LoveRequestHandler, InputParameterRequirement, ManagedAPIHandlerConfig} from "./API2Love";
 import {Utils} from "./Utils";
 import castArray from "lodash/castArray";
-
-
+import {API2LoveRequestHandler, InputParameterRequirement} from "./Types";
 
 export const Post = Utils.generateHTTPMethodDecorator("POST");
 export const Get = Utils.generateHTTPMethodDecorator("GET");
@@ -17,7 +15,7 @@ export const Param = (requirements: InputParameterRequirement) => {
 }
 
 export const Body = Utils.generateParameterSourceDecorator("body");
-export const AllBody = Utils.generateParameterSourceDecorator("body", true);
+export const AllBody = Utils.generateParameterSourceDecorator("body", true, false);
 export const WholeBody = AllBody;
 
 export const Query = Utils.generateParameterSourceDecorator("query");

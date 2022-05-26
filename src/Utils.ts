@@ -1,10 +1,10 @@
 // @ts-ignore
 import functionArguments from "function-arguments";
-import {InputParameterRequirement, ManagedAPIHandlerConfig} from "./API2Love";
 import mergeWith from "lodash/mergeWith";
 import {generateRoutes, walkTree} from "./file-router/lib";
 import path from "path";
 import isArray from "lodash/isArray";
+import {InputParameterRequirement, ManagedAPIHandlerConfig} from "./Types";
 
 export interface Route {
     /**
@@ -93,7 +93,7 @@ export class Utils {
         }
     }
 
-    static generateParameterSourceDecorator(baseSource: string, includeFullSource: boolean = false): (target: Object, propertyKey: string | symbol, parameterIndex: number) => void {
+    static generateParameterSourceDecorator(baseSource: string, includeFullSource: boolean = false, autoConvert: boolean = true): (target: Object, propertyKey: string | symbol, parameterIndex: number) => void {
         return (target: Object, propertyKey: string | symbol, parameterIndex: number) => {
             const [handlerFunction, parameterName] = Utils.getHandlerAndParameterName(target, propertyKey, parameterIndex);
 
@@ -106,6 +106,7 @@ export class Utils {
             Utils.setManagedAPIHandlerConfig(handlerFunction, {
                 params: {
                     [parameterName]: {
+                        autoConvert: autoConvert,
                         sources: [source]
                     }
                 }
