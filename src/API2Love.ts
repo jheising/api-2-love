@@ -144,7 +144,7 @@ export class API2Love {
         const apiRouter = express.Router();
 
         for (let route of apiRoutes) {
-            apiRouter.all(route.endpoint, (req, res, next) => {
+            apiRouter.all(route.endpoint, async (req, res, next) => {
                 // Lazy load the route code
                 let module = require(route.file);
 
@@ -163,7 +163,11 @@ export class API2Love {
                     return;
                 }
 
-                this._handleRequest(handler, req, res as API2LoveResponse, next);
+                try {
+                    await this._handleRequest(handler, req, res as API2LoveResponse, next);
+                } catch (e) {
+                    next(e);
+                }
             });
         }
 
