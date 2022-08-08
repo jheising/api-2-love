@@ -365,27 +365,32 @@ export class API2Love {
             // Do we have any middleware we need to execute first?
             if (handlerConfig.middleware) {
                 for (let middleware of handlerConfig.middleware) {
-                    const shouldContinue = await new Promise((resolve, reject) => {
-                        try {
-                            middleware(req as any, res, (...args) => {
-                                // If next has any arguments in it, let's bail out early
-                                if (args && args.length > 0) {
-                                    next(...args);
-                                    resolve(false);
-                                    return;
-                                }
+                    try {
+                        const shouldContinue = await new Promise(async (resolve, reject) => {
+                            try {
+                                await middleware(req as any, res, (...args) => {
+                                    // If next has any arguments in it, let's bail out early
+                                    if (args && args.length > 0) {
+                                        next(...args);
+                                        resolve(false);
+                                        return;
+                                    }
 
-                                resolve(true);
-                            });
-                        } catch (e) {
-                            reject(e);
+                                    resolve(true);
+                                });
+                            } catch (e) {
+                                reject(e);
+                                return;
+                            }
+                        });
+
+                        // If res.writableEnded is true it means the middleware already ended the response and there is nothing more we can do.
+                        // If shouldContinue is false, then we should assume that next has already been called with an error of some sort and we shouldn't move on any more
+                        if (res.writableEnded || !shouldContinue) {
                             return;
                         }
-                    });
-
-                    // If res.writableEnded is true it means the middleware already ended the response and there is nothing more we can do.
-                    // If shouldContinue is false, then we should assume that next has already been called with an error of some sort and we shouldn't move on any more
-                    if (res.writableEnded || !shouldContinue) {
+                    } catch (e) {
+                        next(e);
                         return;
                     }
                 }
