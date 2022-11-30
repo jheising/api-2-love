@@ -64,6 +64,11 @@ export interface API2LoveConfig {
      * The directory with which to serve API routes. Defaults to "./api". May also be set with environment variable API_ROOT.
      */
     apiRootDirectory?: string;
+
+    /**
+     * Return HAPI responses (https://github.com/jheising/HAPI). Defaults to true.
+     */
+    returnFriendlyResponses?: boolean;
 }
 
 export interface APIFriendlyError extends Error {
@@ -77,6 +82,7 @@ export class API2Love {
     readonly handler?: APIGatewayProxyHandler;
     readonly app?: Express;
     readonly server?: Server;
+    readonly config?: API2LoveConfig;
 
     constructor(config: API2LoveConfig = {}) {
 
@@ -86,6 +92,8 @@ export class API2Love {
             apiPort: Number(process.env.API_PORT ?? 3000),
             ...config
         };
+
+        this.config = config;
 
         log.setLevel(process.env.LOG_LEVEL as any ?? "error");
 
@@ -153,13 +161,13 @@ export class API2Love {
                 }
 
                 if (!module) {
-                    API2Love.throwNotFoundError();
+                    next(API2Love.createNotFoundError());
                     return;
                 }
 
                 const handler = API2Love._getManagedHandler(module, req.method);
                 if (!handler) {
-                    API2Love.throwNotFoundError();
+                    next(API2Love.createNotFoundError());
                     return;
                 }
 
@@ -289,12 +297,18 @@ export class API2Love {
         return newLogger;
     }
 
-    private static _hapiResponseFormatter(response: any, statusCode: number): any {
+    private _defaultResponseFormatter = (response: any, statusCode: number): any => {
         if (statusCode <= 299) {
+
+            if (this.config?.returnFriendlyResponses === true) {
+                return response;
+            }
+
             return {
                 this: "succeeded",
                 with: response
             };
+
         } else {
             return {
                 this: "failed",
@@ -302,10 +316,10 @@ export class API2Love {
                 because: response
             };
         }
-    }
+    };
 
 
-    private _sendResponse(res: Response, response: any, statusCode: number = 200, responseFormatter: ResponseFormatter = API2Love._hapiResponseFormatter) {
+    private _sendResponse(res: Response, response: any, statusCode: number = 200, responseFormatter: ResponseFormatter = this._defaultResponseFormatter) {
         const formattedResponse = responseFormatter(response, statusCode);
         res.status(statusCode).send(formattedResponse);
     }
