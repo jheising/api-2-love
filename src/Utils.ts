@@ -4,8 +4,9 @@ import mergeWith from "lodash/mergeWith";
 import {generateRoutes, walkTree} from "./file-router/lib";
 import path from "path";
 import isArray from "lodash/isArray";
-import {InputParameterRequirement, ManagedAPIHandlerConfig} from "./Types";
+import {ParameterRequirement, ManagedAPIHandlerConfig} from "./Types";
 import castArray from "lodash/castArray";
+import isNumber from "lodash/isNumber";
 
 export interface Route {
     /**
@@ -14,6 +15,8 @@ export interface Route {
     endpoint: string;
     file: string;
 }
+
+export type UniversalDecoratorHandler = (target: any, propertyKey: string | symbol, misc?: number | PropertyDescriptor) => void;
 
 export class Utils {
 
@@ -34,14 +37,14 @@ export class Utils {
         });
     }
 
-    public static setManagedAPIHandlerConfig(handler: Function, config: Partial<ManagedAPIHandlerConfig>) {
-        const handlerConfig = (handler as any).__handler ?? {};
+    public static setAPIConfig(target: any, config: Partial<ManagedAPIHandlerConfig>) {
+        const handlerConfig = (target as any).__api ?? {};
         Utils.mergeObjects(handlerConfig, config);
-        (handler as any).__handler = handlerConfig;
+        (target as any).__api = handlerConfig;
     }
 
-    public static getManagedAPIHandlerConfig(handler: Function): ManagedAPIHandlerConfig | undefined {
-        return (handler as any).__handler;
+    public static getAPIConfig(target: any): ManagedAPIHandlerConfig | undefined {
+        return (target as any).__api ?? (target as any).prototype?.__api;
     }
 
     public static generateAPIRoutesFromFiles(rootDirectory: string): Route[] {
@@ -74,24 +77,61 @@ export class Utils {
         }
     }
 
-    static generateMethodDecorator(config: Partial<ManagedAPIHandlerConfig>): (target: any, propertyKey: string, descriptor: PropertyDescriptor) => void {
-        return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
-            // @ts-ignore
-            const handlerFunction: Function = target[propertyKey];
-            Utils.setManagedAPIHandlerConfig(handlerFunction, config);
+    static generateUniversalDecorator(config: Partial<ManagedAPIHandlerConfig> | Partial<ParameterRequirement>): UniversalDecoratorHandler {
+        return (target: any, propertyKey: string | symbol, misc?: number | PropertyDescriptor) => {
+            if (isNumber(misc)) {
+                // This is a decorator on a function
+                const [handlerFunction, parameterName] = Utils.getHandlerAndParameterName(target, propertyKey, misc as number);
+                Utils.setAPIConfig(handlerFunction, {
+                    params: {
+                        [parameterName]: config
+                    }
+                });
+            } else if (misc === undefined) {
+                // This is a decorator on a class property
+                Utils.setAPIConfig(target, {
+                    params: {
+                        [propertyKey]: config
+                    }
+                });
+            } else {
+                // This is a decorator on a function
+                const handlerFunction: Function = target[propertyKey];
+                Utils.setAPIConfig(handlerFunction, config);
+            }
         }
     }
 
-    static generateParameterDecorator(requirements: Partial<InputParameterRequirement>): (target: Object, propertyKey: string | symbol, parameterIndex: number) => void {
-        return (target: Object, propertyKey: string | symbol, parameterIndex: number) => {
-            const [handlerFunction, parameterName] = Utils.getHandlerAndParameterName(target, propertyKey, parameterIndex);
-            Utils.setManagedAPIHandlerConfig(handlerFunction, {
-                params: {
-                    [parameterName]: requirements
-                }
-            });
-        }
-    }
+    static generateMethodDecorator = Utils.generateUniversalDecorator;
+    static generateParameterDecorator = Utils.generateUniversalDecorator;
+    // static generateMethodDecorator(config: Partial<ManagedAPIHandlerConfig>): (target: any, propertyKey: string | symbol, descriptor: PropertyDescriptor) => void {
+    //     return (target: any, propertyKey: string | symbol, descriptor: PropertyDescriptor) => {
+    //         // @ts-ignore
+    //         const handlerFunction: Function = target[propertyKey];
+    //         Utils.setAPIConfig(handlerFunction, config);
+    //     }
+    // }
+
+    // static generateParameterDecorator(requirements: Partial<ParameterRequirement>): (target: Object, propertyKey: string | symbol, parameterIndex: number) => void {
+    //
+    //     // return (target: Object, propertyKey: string | symbol, parameterIndex: number = -1) => {
+    //     //     const [handlerFunction, parameterName] = Utils.getHandlerAndParameterName(target, propertyKey, parameterIndex);
+    //     //     Utils.setAPIConfig(handlerFunction, {
+    //     //         params: {
+    //     //             [parameterName]: requirements
+    //     //         }
+    //     //     });
+    //     //     // if (parameterIndex === -1) {
+    //     //     //     Utils.setAPIConfig(target, {
+    //     //     //         params: {
+    //     //     //             [propertyKey]: requirements
+    //     //     //         }
+    //     //     //     });
+    //     //     // } else {
+    //     //     //
+    //     //     // }
+    //     // }
+    // }
 
     static generateParameterSourceDecorator(baseSource: string | string[], includeFullSource: boolean = false, autoConvert: boolean = true): (target: Object, propertyKey: string | symbol, parameterIndex: number) => void {
         return (target: Object, propertyKey: string | symbol, parameterIndex: number) => {
@@ -103,7 +143,7 @@ export class Utils {
                 source = [...source, parameterName];
             }
 
-            Utils.setManagedAPIHandlerConfig(handlerFunction, {
+            Utils.setAPIConfig(handlerFunction, {
                 params: {
                     [parameterName]: {
                         autoConvert: autoConvert,

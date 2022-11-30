@@ -145,25 +145,27 @@ export class API2Love {
 
         for (let route of apiRoutes) {
             apiRouter.all(route.endpoint, async (req, res, next) => {
-                // Lazy load the route code
-                let module = require(route.file);
-
-                if (module.default) {
-                    module = module.default;
-                }
-
-                if (!module) {
-                    API2Love.throwNotFoundError();
-                    return;
-                }
-
-                const handler = API2Love._getManagedHandler(module, req.method);
-                if (!handler) {
-                    API2Love.throwNotFoundError();
-                    return;
-                }
-
                 try {
+
+                    // Lazy load the route code
+                    let module = require(path.resolve(process.cwd(), route.file));
+
+                    if (module.default) {
+                        module = module.default;
+                    }
+
+                    if (!module) {
+                        API2Love.throwNotFoundError();
+                        return;
+                    }
+
+                    const handler = API2Love._getManagedHandler(module, req.method);
+                    if (!handler) {
+                        API2Love.throwNotFoundError();
+                        return;
+                    }
+
+
                     await this._handleRequest(handler, req, res as API2LoveResponse, next);
                 } catch (e) {
                     next(e);
@@ -246,7 +248,7 @@ export class API2Love {
         } else if (theObject.__httpMethods?.[httpMethod.toUpperCase()]) {
             handlerFunction = theObject[theObject.__httpMethods?.[httpMethod.toUpperCase()]];
             if (handlerFunction) {
-                handlerConfig = Utils.getManagedAPIHandlerConfig(handlerFunction);
+                handlerConfig = Utils.getAPIConfig(handlerFunction);
             }
         } else if (theObject?.prototype.__httpMethods?.[httpMethod.toUpperCase()]) {
             // This is an instance function which means we need to create an instance of the object
@@ -257,7 +259,7 @@ export class API2Love {
             //handlerFunction = handlerFunction?.bind(objectInstance); // TODO: this screws with the function parameter names
 
             if (handlerFunction) {
-                handlerConfig = Utils.getManagedAPIHandlerConfig(handlerFunction);
+                handlerConfig = Utils.getAPIConfig(handlerFunction);
             }
         }
 

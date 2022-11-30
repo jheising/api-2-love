@@ -1,20 +1,15 @@
-import {Post, Path} from "../../../src";
+import {Post, Path, Description, Type} from "../../../src";
 
 
 export default class TestAPI {
     @Post
-    // @Use((req, res, next) => {
-    //     res.locals.blah = "blah";
-    //     next();
-    // })
-    // @UseAPIKeyAuth({
-    //     apiKeys: ["1", "2"]
-    // })
     static postRelease(
         @Path
             namespace: string,
+        @Description("This is a version!")
         @Path
-            version: string
+        @Type(Number)
+            version: number
     ) {
         return [namespace, version];
     }

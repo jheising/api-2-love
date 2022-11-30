@@ -1,6 +1,6 @@
 import {Utils} from "./Utils";
 import castArray from "lodash/castArray";
-import {API2LoveRequestHandler, API2LoveResponse, InputParameterRequirement, ResponseFormatter} from "./Types";
+import {API2LoveRequestHandler, ParameterRequirement, PrimitiveType, ResponseFormatter} from "./Types";
 
 export const Post = Utils.generateHTTPMethodDecorator("POST");
 export const Get = Utils.generateHTTPMethodDecorator("GET");
@@ -10,7 +10,7 @@ export const Delete = Utils.generateHTTPMethodDecorator("DELETE");
 export const Options = Utils.generateHTTPMethodDecorator("OPTIONS");
 export const Head = Utils.generateHTTPMethodDecorator("HEAD");
 
-export const Param = (requirements: InputParameterRequirement) => {
+export const Param = (requirements: ParameterRequirement) => {
     return Utils.generateParameterDecorator(requirements);
 }
 
@@ -31,6 +31,12 @@ export const Request = Utils.generateParameterSourceDecorator("request", true);
 export const Response = Utils.generateParameterSourceDecorator("response", true);
 export const Logger = Utils.generateParameterSourceDecorator(["response", "locals", "logger"], true);
 
+export const Type = (type: PrimitiveType) => {
+    return Utils.generateParameterDecorator({
+        type: type
+    });
+};
+
 export const Optional = Utils.generateParameterDecorator({
     required: false
 });
@@ -49,5 +55,22 @@ export const FormatResponse = (formatter: ResponseFormatter, contentType?: strin
 export const Use = (middleware: API2LoveRequestHandler | API2LoveRequestHandler[]) => {
     return Utils.generateMethodDecorator({
         middleware: castArray(middleware)
+    });
+}
+
+// Documentation
+export const Description = (description: string) => {
+    return Utils.generateUniversalDecorator({
+        docs: {
+            description: description
+        }
+    });
+}
+
+export const Tag = (tag: string) => {
+    return Utils.generateUniversalDecorator({
+        docs: {
+            tags: [tag]
+        }
     });
 }
