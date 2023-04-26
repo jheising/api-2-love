@@ -69,6 +69,8 @@ export interface API2LoveConfig {
      * Return HAPI responses (https://github.com/jheising/HAPI). Defaults to true.
      */
     returnFriendlyResponses?: boolean;
+
+    binaryMediaTypes?: string[];
 }
 
 export interface APIFriendlyError extends Error {
@@ -202,7 +204,13 @@ export class API2Love {
 
         if (isLambda) {
             const serverless = require("serverless-http");
-            this.handler = serverless(this.app);
+            const serverlessOptions: any = {};
+
+            if (config.binaryMediaTypes) {
+                serverlessOptions.binary = config.binaryMediaTypes
+            }
+
+            this.handler = serverless(this.app, serverlessOptions);
         } else {
             this.server = this.app.listen(config.apiPort);
             log.info(`API Started on port`, config.apiPort);
