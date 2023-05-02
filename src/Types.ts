@@ -1,6 +1,18 @@
 import {Logger} from "loglevel";
 import {RequestHandler, Request, Response} from "express/ts4.0";
 import {Route} from "./Utils";
+import { OperationObject } from "openapi3-ts/src/model/openapi31";
+
+export interface FriendlyAPIResponseSuccess<T = any> {
+    this: "succeeded";
+    with: any;
+}
+
+export interface FriendlyAPIResponseFailure<T = any> {
+    this: "failed";
+    with: number;
+    because?: T;
+}
 
 export interface InputParameterRequirement {
     required?: boolean;
@@ -20,6 +32,7 @@ export interface ManagedAPIHandlerConfig {
     responseFormatter?: ResponseFormatter;
     middleware?: API2LoveRequestHandler[];
     params?: InputParameterRequirements;
+    docs?: OperationObject
 }
 
 export type InputParameterRequirements = { [paramName: string]: InputParameterRequirement };

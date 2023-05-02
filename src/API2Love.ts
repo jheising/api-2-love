@@ -5,22 +5,22 @@ import cookieParser from "cookie-parser";
 import path from "path";
 // @ts-ignore
 import isLambda from "is-lambda";
-import {APIGatewayProxyHandler} from "aws-lambda";
-import {Server} from "http";
-import {Express, Request, Response, NextFunction} from "express/ts4.0";
-import log, {Logger, LogLevelDesc} from "loglevel";
-import {nanoid} from "nanoid";
+import { APIGatewayProxyHandler } from "aws-lambda";
+import { Server } from "http";
+import { Express, Request, Response, NextFunction } from "express/ts4.0";
+import log, { Logger, LogLevelDesc } from "loglevel";
+import { nanoid } from "nanoid";
 import get from "lodash/get";
 import has from "lodash/has";
 import isNil from "lodash/isNil";
 import isArray from "lodash/isArray";
-import {Utils} from "./Utils";
-import {ErrorRequestHandler} from "express-serve-static-core";
+import { Utils } from "./Utils";
+import { ErrorRequestHandler } from "express-serve-static-core";
 import cors from "cors";
 import wcmatch from "wildcard-match";
 import {
     API2LoveResponse,
-    API2LoveRoute,
+    API2LoveRoute, FriendlyAPIResponseFailure, FriendlyAPIResponseSuccess,
     InputParameterRequirements,
     ManagedAPIHandler,
     ManagedAPIHandlerConfig, ResponseFormatter
@@ -86,14 +86,19 @@ export class API2Love {
     readonly server?: Server;
     readonly config?: API2LoveConfig;
 
-    constructor(config: API2LoveConfig = {}) {
-
-        config = {
+    private static _initializeConfig(config: API2LoveConfig = {}): API2LoveConfig {
+        return {
+            returnFriendlyResponses: true,
             loadStandardMiddleware: true,
             apiRootDirectory: path.resolve(process.cwd(), process.env.API_ROOT ?? "./api"),
             apiPort: Number(process.env.API_PORT ?? 3000),
             ...config
         };
+    }
+
+    constructor(config: API2LoveConfig = {}) {
+
+        config = API2Love._initializeConfig(config);
 
         this.config = config;
 
@@ -138,7 +143,7 @@ export class API2Love {
         if (config.loadStandardMiddleware) {
             this.app.use(cookieParser());
             this.app.use(bodyParser.urlencoded({
-                extended: true,
+                extended: true
             }));
             this.app.use(bodyParser.json());
             this.app.use(bodyParser.text());
@@ -207,7 +212,7 @@ export class API2Love {
             const serverlessOptions: any = {};
 
             if (config.binaryMediaTypes) {
-                serverlessOptions.binary = config.binaryMediaTypes
+                serverlessOptions.binary = config.binaryMediaTypes;
             }
 
             this.handler = serverless(this.app, serverlessOptions);
@@ -257,7 +262,7 @@ export class API2Love {
         let handlerFunction: Function | undefined;
 
         if (isArray(handler) && (handler as ManagedAPIHandler).length >= 2) {
-            handlerConfig = {...(handler as ManagedAPIHandler)[0]};
+            handlerConfig = { ...(handler as ManagedAPIHandler)[0] };
             handlerFunction = (handler as ManagedAPIHandler)[1];
         } else if (theObject.__httpMethods?.[httpMethod.toUpperCase()]) {
             handlerFunction = theObject[theObject.__httpMethods?.[httpMethod.toUpperCase()]];
@@ -292,7 +297,7 @@ export class API2Love {
         let originalFactory = newLogger.methodFactory;
         newLogger.methodFactory = (methodName, logLevel, loggerName) => {
             let rawMethod = originalFactory(methodName, logLevel, loggerName);
-            return function () {
+            return function() {
                 const argData = Array.from(arguments);
                 rawMethod(JSON.stringify({
                     level: methodName,
@@ -305,10 +310,10 @@ export class API2Love {
         return newLogger;
     }
 
-    private _defaultResponseFormatter = (response: any, statusCode: number): any => {
+    private _defaultResponseFormatter = (response: any, statusCode: number): FriendlyAPIResponseSuccess | FriendlyAPIResponseFailure => {
         if (statusCode <= 299) {
 
-            if (this.config?.returnFriendlyResponses === true) {
+            if (this.config?.returnFriendlyResponses === false) {
                 return response;
             }
 
@@ -347,7 +352,7 @@ export class API2Love {
                 request: {
                     ...req,
                     // Make a copy of the headers so we get by path
-                    headers: {...req.headers}
+                    headers: { ...req.headers }
                 },
                 response: res
             };
