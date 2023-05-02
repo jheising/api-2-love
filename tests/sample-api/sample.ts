@@ -3,11 +3,6 @@ import { Person } from "../sample-types/Person";
 
 export default class SampleAPI {
     @Post
-    @Docs({
-        description: "Hello world!",
-        parameters: [],
-        responses: {}
-    })
     static postWithPartialBody(
         @Body
             bodyParam1: string,

@@ -1,6 +1,6 @@
-import {Logger} from "loglevel";
-import {RequestHandler, Request, Response} from "express/ts4.0";
-import {Route} from "./Utils";
+import { Logger } from "loglevel";
+import { RequestHandler, Request, Response } from "express/ts4.0";
+import { Route } from "./Utils";
 import { OperationObject } from "openapi3-ts/src/model/openapi31";
 
 export interface FriendlyAPIResponseSuccess<T = any> {
@@ -32,7 +32,7 @@ export interface ManagedAPIHandlerConfig {
     responseFormatter?: ResponseFormatter;
     middleware?: API2LoveRequestHandler[];
     params?: InputParameterRequirements;
-    docs?: OperationObject
+    docs?: Partial<OperationObject>;
 }
 
 export type InputParameterRequirements = { [paramName: string]: InputParameterRequirement };
@@ -41,6 +41,7 @@ export type API2LoveLogger = Logger;
 
 export interface API2LoveRequestLocals {
     logger: API2LoveLogger;
+
     [x: string | number | symbol]: unknown;
 }
 

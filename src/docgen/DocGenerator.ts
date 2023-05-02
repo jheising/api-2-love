@@ -114,24 +114,9 @@ export class DocGenerator {
         );
 
         DocGenerator._forEachEndpoint(routes, (route, method, httpMethodName, sourceFile) => {
-
-            const docsDecorator = method.getDecorator("Docs");
-            if (!!docsDecorator) {
-                try {
-                    const apiModule = require(sourceFile.getFilePath()).default;
-                    // @ts-ignore
-                    const [handlerSettings] = API2Love._getManagedHandler(apiModule, httpMethodName);
-                    if (handlerSettings.docs) {
-                        set(apiSpec.paths!, [route.url, httpMethodName], handlerSettings.docs);
-                        return;
-                    }
-                } catch (e) {
-                }
-            }
-
             const pathParamNames = [...route.url.matchAll(/\{(.+?)}/g)].map(match => match[1]);
 
-            const endpoint: OperationObject = {
+            let endpoint: OperationObject = {
                 summary: DocGenerator._toSentenceCase(method.getName()),
                 parameters: [],
                 responses: {}
@@ -283,6 +268,23 @@ export class DocGenerator {
             const returnType = method.getReturnType();
             endpoint.responses = DocGenerator._generateResponseSchema(returnType, apiSpec, schemaProgram, config);
 
+            // Does this method have any overriding documentation?
+            const docsDecorator = method.getDecorator("Docs");
+            if (!!docsDecorator) {
+                try {
+                    const apiModule = require(sourceFile.getFilePath()).default;
+                    // @ts-ignore
+                    const [handlerSettings] = API2Love._getManagedHandler(apiModule, httpMethodName);
+                    if (handlerSettings.docs) {
+                        endpoint = {
+                            ...endpoint,
+                            ...handlerSettings.docs
+                        };
+                    }
+                } catch (e) {
+                }
+            }
+
             set(apiSpec.paths!, [route.url, httpMethodName], endpoint);
         });
 
@@ -362,7 +364,7 @@ export class DocGenerator {
                 return restOfSchema as SchemaObject;
             }
         } catch (e) {
-            console.error("_generateAPISchema", e);
+            //console.error("_generateAPISchema", e);
         }
     }
 

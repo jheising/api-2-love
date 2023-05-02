@@ -57,7 +57,12 @@ export const Use = (middleware: API2LoveRequestHandler | API2LoveRequestHandler[
     });
 }
 
-export const Docs = (openAPIDocs:OperationObject) => {
+/**
+ * Specify OpenAPI operation documentation for this object. Any values here will overrule those auto-generated
+ * @param openAPIDocs
+ * @constructor
+ */
+export const Docs = (openAPIDocs:Partial<OperationObject>) => {
     return Utils.generateMethodDecorator({
         docs: openAPIDocs
     });
