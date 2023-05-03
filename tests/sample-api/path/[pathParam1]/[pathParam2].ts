@@ -1,5 +1,5 @@
-import { Cookie, Get, Header, Optional, Options, Post, Put, Request, Patch, WholeBody } from "../../../src";
-import { Persons, Person } from "../../sample-types/Person";
+import { Cookie, Get, Header, Optional, Options, Post, Put, Request, Patch, WholeBody } from "../../../../src";
+import { Persons, Person } from "../../../sample-types/Person";
 
 export default class SampleAPIWithPathParams {
     @Get

@@ -25,9 +25,11 @@ import {
     ManagedAPIHandler,
     ManagedAPIHandlerConfig, ResponseFormatter
 } from "./Types";
-
+import type { InfoObject } from "openapi3-ts/src/model/openapi31";
 
 export interface API2LoveConfig {
+
+    info?: InfoObject;
 
     /**
      * The server port to listen on. Defaults to 3000. May also be set with environment variable API_PORT. This setting is ignored when running on Lambda.
@@ -85,6 +87,7 @@ export class API2Love {
     readonly app?: Express;
     readonly server?: Server;
     readonly config?: API2LoveConfig;
+    static readonly logger = log;
 
     private static _initializeConfig(config: API2LoveConfig = {}): API2LoveConfig {
         return {
@@ -104,6 +107,10 @@ export class API2Love {
 
         log.setLevel(process.env.LOG_LEVEL as any ?? "error");
 
+        const packageInfo = require("../package.json");
+
+        log.info(packageInfo.name, packageInfo.version);
+
         this.app = config.app ?? express();
 
         // Create our contextual logger
@@ -122,6 +129,11 @@ export class API2Love {
             res.locals.logger = requestLogger;
 
             res.once("finish", () => {
+
+                requestLogger.debug({ statusCode: res.statusCode });
+
+                //log.debug(req.method, req.url, res.statusCode);
+
                 // Clean the logger up after the request
                 const loggers = log.getLoggers();
                 delete loggers[(requestLogger as any).name];
@@ -153,7 +165,12 @@ export class API2Love {
 
         // If routes aren't directly specified, then we can use file-system routing
         if (!apiRoutes) {
+            log.info("Loading API routes from", config.apiRootDirectory);
             apiRoutes = Utils.generateAPIRoutesFromFiles(config.apiRootDirectory as string);
+
+            if (apiRoutes.length === 0) {
+                log.warn("No API routes found at", config.apiRootDirectory);
+            }
         }
 
         const apiRouter = express.Router();
@@ -300,6 +317,7 @@ export class API2Love {
             return function() {
                 const argData = Array.from(arguments);
                 rawMethod(JSON.stringify({
+                    time: new Date().toISOString(),
                     level: methodName,
                     ...contextData,
                     message: argData

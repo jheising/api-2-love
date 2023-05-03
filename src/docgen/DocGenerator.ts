@@ -1,9 +1,7 @@
 import path from "path";
 import { ClassDeclaration, MethodDeclaration, Project, SourceFile, SyntaxKind, Type } from "ts-morph";
-import { generateRoutes, walkTree } from "../file-router/lib";
 import { OpenAPIObject } from "openapi3-ts/oas31";
-import { Route } from "../file-router/types";
-import { InfoObject, OperationObject, ParameterObject, ResponsesObject, SchemaObject } from "openapi3-ts/src/model/openapi31";
+import { OperationObject, ParameterObject, ResponsesObject, SchemaObject } from "openapi3-ts/src/model/openapi31";
 import * as TJS from "typescript-json-schema";
 import crypto from "crypto";
 import fs from "fs";
@@ -12,6 +10,7 @@ import { API2Love, API2LoveConfig } from "../API2Love";
 import defaultsDeep from "lodash/defaultsDeep";
 import isString from "lodash/isString";
 import set from "lodash/set";
+import { Route, Utils } from "../Utils";
 
 const HTTP_METHODS = ["get", "post", "put", "patch", "delete", "head", "options", "trace"];
 
@@ -45,14 +44,17 @@ const HAPI_FAILURE_SCHEMA = {
 };
 
 export class DocGenerator {
-    static async generateDocs(info: InfoObject, config: API2LoveConfig = {}): Promise<OpenAPIObject> {
+    static async generateDocs(config: API2LoveConfig): Promise<OpenAPIObject> {
         // @ts-ignore
         config = API2Love._initializeConfig(config);
         const apiRootDirectory = path.resolve(config.apiRootDirectory!);
 
         const apiSpec: OpenAPIObject = {
             openapi: "3.1.0",
-            info: info,
+            info: config.info ?? {
+                title: "My API",
+                version: "1.0.0"
+            },
             paths: {},
             components: {
                 schemas: {}
@@ -60,14 +62,14 @@ export class DocGenerator {
         };
 
         // Get all of our API routes
-        const routes = generateRoutes(walkTree(apiRootDirectory));
+        const routes = Utils.generateAPIRoutesFromFiles(apiRootDirectory);
+
         // Change route param formats from :param to {param}
-        routes.forEach(route => route.url = route.url.replace(/:(.+?)(\/|$)/g, `{$1}$2`));
+        routes.forEach(route => route.endpoint = route.endpoint.replace(/:(.+?)(\/|$)/g, `{$1}$2`));
         const typeDefs = new Set<string>();
 
         // Loop through all of our endpoints and extract all types from them
         DocGenerator._forEachEndpoint(routes, (route, method, httpMethodName) => {
-
             let partialBodyTypes: { name: string, type: string, optional: boolean }[] = [];
 
             for (let parameter of method.getParameters()) {
@@ -90,7 +92,7 @@ export class DocGenerator {
 
             if (partialBodyTypes.length > 0) {
                 const partialBodyTypeProps = partialBodyTypes.map(pbt => `${pbt.name}${pbt.optional ? "?" : ""}: ${pbt.type}`).join(";");
-                typeDefs.add(`export interface _PartialBodyType${DocGenerator._createHash(route.url + method)} {${partialBodyTypeProps}};`);
+                typeDefs.add(`export interface _PartialBodyType${DocGenerator._createHash(route.endpoint + method)} {${partialBodyTypeProps}};`);
             }
 
             const returnTypeDef = DocGenerator._generateTypeDefinition(method.getReturnType());
@@ -114,7 +116,7 @@ export class DocGenerator {
         );
 
         DocGenerator._forEachEndpoint(routes, (route, method, httpMethodName, sourceFile) => {
-            const pathParamNames = [...route.url.matchAll(/\{(.+?)}/g)].map(match => match[1]);
+            const pathParamNames = [...route.endpoint.matchAll(/\{(.+?)}/g)].map(match => match[1]);
 
             let endpoint: OperationObject = {
                 summary: DocGenerator._toSentenceCase(method.getName()),
@@ -247,7 +249,7 @@ export class DocGenerator {
                 endpoint.parameters?.push(param);
             }
 
-            let requestBodySchema = DocGenerator._generateAPISchema(requestBodyType ?? `_PartialBodyType${DocGenerator._createHash(route.url + method)}`, apiSpec, schemaProgram);
+            let requestBodySchema = DocGenerator._generateAPISchema(requestBodyType ?? `_PartialBodyType${DocGenerator._createHash(route.endpoint + method)}`, apiSpec, schemaProgram);
 
             if (requestBodySchema) {
                 switch (requestBodySchema.type) {
@@ -285,7 +287,7 @@ export class DocGenerator {
                 }
             }
 
-            set(apiSpec.paths!, [route.url, httpMethodName], endpoint);
+            set(apiSpec.paths!, [route.endpoint, httpMethodName], endpoint);
         });
 
         return apiSpec;
@@ -385,7 +387,7 @@ export class DocGenerator {
 
     private static _forEachEndpoint(routes: Route[], predicate: (route: Route, method: MethodDeclaration, httpMethodName: string, sourceFile: SourceFile) => void) {
         for (let route of routes) {
-            const sourceFile = docProject.getSourceFile(path.join(route.file.path, route.file.name));
+            const sourceFile = docProject.getSourceFile(route.file);
 
             if (!sourceFile) {
                 continue;
