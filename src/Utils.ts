@@ -18,7 +18,6 @@ const CATCH_ALL_REGEX = /\.{3}(.+)/;
 const OPTIONAL_CATCH_ALL_REGEX = /\[\.{3}(.+)]/;
 
 export class Utils {
-
     static getAPIConfig(configPath?: string): API2LoveConfig {
         try {
             configPath = path.resolve(process.cwd(), configPath ?? process.env.API_CONFIG_FILE ?? "api.config.js");
@@ -50,7 +49,7 @@ export class Utils {
         }
 
         return results;
-    };
+    }
 
     static mergeObjects(...values: any[]) {
         // @ts-ignore
@@ -80,28 +79,28 @@ export class Utils {
     }
 
     public static nextRouteToExpressRoute(filename: string): string {
-        return filename
-            .replace(/index\..+$/, "") // Remove index.ext from all endpoints
-            .replace(/\.[^/.]+$/, "") // Remove file extensions
-            .replace(/\[([^/]+)]/g, (fullMatch, paramName) => {
+        return (
+            filename
+                .replace(/index\..+$/, "") // Remove index.ext from all endpoints
+                .replace(/\.[^/.]+$/, "") // Remove file extensions
+                .replace(/\[([^/]+)]/g, (fullMatch, paramName) => {
+                    if (OPTIONAL_CATCH_ALL_REGEX.test(paramName)) {
+                        return paramName.replace(OPTIONAL_CATCH_ALL_REGEX, ":$1([\\w/]{0,})?");
+                    } else if (CATCH_ALL_REGEX.test(paramName)) {
+                        return paramName.replace(CATCH_ALL_REGEX, ":$1([\\w/]+)");
+                    }
 
-                if (OPTIONAL_CATCH_ALL_REGEX.test(paramName)) {
-                    return paramName.replace(OPTIONAL_CATCH_ALL_REGEX, ":$1([\\w/\]{0,})?");
-                } else if (CATCH_ALL_REGEX.test(paramName)) {
-                    return paramName.replace(CATCH_ALL_REGEX, ":$1([\\w/\]+)");
-                }
-
-                return `:${paramName}`;
-            }) // Handle route parameters like [slug]
-            // .replace(/\[\[\.{3}(.+?)]]/g, ":$1(.+)?") // Handle optional catch-all routes like [[...slug]]
-            // .replace(/\[\.{3}(.+?)]/g, ":$1(.{1,}$)") // Handle catch-all routes like [...slug]
-            .replace(/\/$/, ""); // Remove trailing slashes
+                    return `:${paramName}`;
+                }) // Handle route parameters like [slug]
+                // .replace(/\[\[\.{3}(.+?)]]/g, ":$1(.+)?") // Handle optional catch-all routes like [[...slug]]
+                // .replace(/\[\.{3}(.+?)]/g, ":$1(.{1,}$)") // Handle catch-all routes like [...slug]
+                .replace(/\/$/, "")
+        ); // Remove trailing slashes
     }
 
     public static calculateRoutePriority(route: string): number {
         const parts = route.split("/");
         return parts.reduce((sum, part, index) => {
-
             let priority = 0;
 
             if (part.startsWith(":")) {
@@ -118,13 +117,14 @@ export class Utils {
         try {
             const files = Utils.walkFileTree(rootDirectory);
 
-            return files.map(filename => {
-                let expressRoute = Utils.nextRouteToExpressRoute(filename.replace(rootDirectory, ""));
-                return {
-                    endpoint: expressRoute,
-                    file: filename
-                };
-            })
+            return files
+                .map(filename => {
+                    let expressRoute = Utils.nextRouteToExpressRoute(filename.replace(rootDirectory, ""));
+                    return {
+                        endpoint: expressRoute,
+                        file: filename
+                    };
+                })
                 .sort((a, b) => Utils.calculateRoutePriority(a.endpoint) - Utils.calculateRoutePriority(b.endpoint));
         } catch (e) {
             return [];
@@ -171,7 +171,11 @@ export class Utils {
         };
     }
 
-    static generateParameterSourceDecorator(baseSource: string | string[], includeFullSource: boolean = false, autoConvert: boolean = true): (target: Object, propertyKey: string | symbol, parameterIndex: number) => void {
+    static generateParameterSourceDecorator(
+        baseSource: string | string[],
+        includeFullSource: boolean = false,
+        autoConvert: boolean = true
+    ): (target: Object, propertyKey: string | symbol, parameterIndex: number) => void {
         return (target: Object, propertyKey: string | symbol, parameterIndex: number) => {
             const [handlerFunction, parameterName] = Utils.getHandlerAndParameterName(target, propertyKey, parameterIndex);
 

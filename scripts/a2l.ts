@@ -10,22 +10,19 @@ import { Utils } from "../src/Utils";
 
 const { program } = require("commander");
 
-program.name("a2l")
-    .description("api-2-love command line interface")
-    .version("0.1.0");
+program.name("a2l").description("api-2-love command line interface").version("0.1.0");
 
-program.command("dev")
+program
+    .command("dev")
     .option("-c --config <string>", "the location of your api.config.ts or api.config.js file", "./api.config.js")
     .action(async (options: any) => {
-        const child = spawn("node_modules/.bin/ts-node-dev",
-            ["--watch", "./**/*.ts", "--ignore-watch", "node_modules/*", "--transpile-only", path.resolve(__dirname, "server")],
-            {
-                stdio: "inherit",
-                env: {
-                    ...process.env,
-                    API_CONFIG_FILE: options.config
-                }
-            });
+        const child = spawn("node_modules/.bin/ts-node-dev", ["--watch", "./**/*.ts", "--ignore-watch", "node_modules/*", "--transpile-only", path.resolve(__dirname, "server")], {
+            stdio: "inherit",
+            env: {
+                ...process.env,
+                API_CONFIG_FILE: options.config
+            }
+        });
     });
 
 // program.command("build")
@@ -44,12 +41,12 @@ program.command("dev")
 //             });
 //     });
 
-program.command("generate:docs")
+program
+    .command("generate:docs")
     .option("-d --defaultSpecFile <string>", "the default OpenAPI 3.1 spec for your API— this will be merged in with the generated documentation")
     .option("-c --config <string>", "the location of your api.config.ts or api.config.js file", "./api.config.js")
     .option("-o, --outfile <string>", "output docs to a file, otherwise will print to console.")
     .action(async (options: any) => {
-
         const config: API2LoveConfig = Utils.getAPIConfig(options.config);
 
         let docs = await DocGenerator.generateDocs(config);
@@ -70,6 +67,5 @@ program.command("generate:docs")
             return;
         }
     });
-
 
 program.parse();

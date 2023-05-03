@@ -19,28 +19,28 @@ const docProject = new Project({
 });
 
 const HAPI_SUCCESS_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "this": {
-            "type": "string",
-            "const": "succeeded"
+    type: "object",
+    properties: {
+        this: {
+            type: "string",
+            const: "succeeded"
         }
     },
-    "required": ["this", "with"]
+    required: ["this", "with"]
 };
 
 const HAPI_FAILURE_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "this": {
-            "type": "string",
-            "const": "failed"
+    type: "object",
+    properties: {
+        this: {
+            type: "string",
+            const: "failed"
         },
-        "with": {
-            "type": "number"
+        with: {
+            type: "number"
         }
     },
-    "required": ["this", "with"]
+    required: ["this", "with"]
 };
 
 export class DocGenerator {
@@ -65,12 +65,12 @@ export class DocGenerator {
         const routes = Utils.generateAPIRoutesFromFiles(apiRootDirectory);
 
         // Change route param formats from :param to {param}
-        routes.forEach(route => route.endpoint = route.endpoint.replace(/:(.+?)(\/|$)/g, `{$1}$2`));
+        routes.forEach(route => (route.endpoint = route.endpoint.replace(/:(.+?)(\/|$)/g, `{$1}$2`)));
         const typeDefs = new Set<string>();
 
         // Loop through all of our endpoints and extract all types from them
         DocGenerator._forEachEndpoint(routes, (route, method, httpMethodName) => {
-            let partialBodyTypes: { name: string, type: string, optional: boolean }[] = [];
+            let partialBodyTypes: { name: string; type: string; optional: boolean }[] = [];
 
             for (let parameter of method.getParameters()) {
                 const isPartialBodyParam = !!parameter.getDecorator("Body");
@@ -106,14 +106,9 @@ export class DocGenerator {
         const typeDefFilename = path.join(os.tmpdir(), `${DocGenerator._createHash(typeDefsString)}.ts`);
         await fs.promises.writeFile(typeDefFilename, typeDefsString);
 
-        const schemaProgram = TJS.getProgramFromFiles(
-            [
-                typeDefFilename
-            ],
-            {
-                skipLibCheck: true
-            }
-        );
+        const schemaProgram = TJS.getProgramFromFiles([typeDefFilename], {
+            skipLibCheck: true
+        });
 
         DocGenerator._forEachEndpoint(routes, (route, method, httpMethodName, sourceFile) => {
             const pathParamNames = [...route.endpoint.matchAll(/\{(.+?)}/g)].map(match => match[1]);
@@ -233,7 +228,7 @@ export class DocGenerator {
                         case "AllHeaders":
                         case "Logger":
                         case "Response":
-                        case "Request" : {
+                        case "Request": {
                             isPublicParameter = false;
                             break;
                         }
@@ -249,7 +244,11 @@ export class DocGenerator {
                 endpoint.parameters?.push(param);
             }
 
-            let requestBodySchema = DocGenerator._generateAPISchema(requestBodyType ?? `_PartialBodyType${DocGenerator._createHash(route.endpoint + method)}`, apiSpec, schemaProgram);
+            let requestBodySchema = DocGenerator._generateAPISchema(
+                requestBodyType ?? `_PartialBodyType${DocGenerator._createHash(route.endpoint + method)}`,
+                apiSpec,
+                schemaProgram
+            );
 
             if (requestBodySchema) {
                 switch (requestBodySchema.type) {
@@ -283,8 +282,7 @@ export class DocGenerator {
                             ...handlerSettings.docs
                         };
                     }
-                } catch (e) {
-                }
+                } catch (e) {}
             }
 
             set(apiSpec.paths!, [route.endpoint, httpMethodName], endpoint);
@@ -327,7 +325,7 @@ export class DocGenerator {
     }
 
     private static _generateAPISchema(type: Type | string, apiSpec: OpenAPIObject, program: TJS.Program, defaultValue?: any): SchemaObject | undefined {
-        const parameterTypeName = isString(type) ? type as string : DocGenerator._generateTypeDefinitionName(type);
+        const parameterTypeName = isString(type) ? (type as string) : DocGenerator._generateTypeDefinitionName(type);
 
         try {
             let schema = TJS.generateSchema(program, parameterTypeName, {
@@ -359,7 +357,7 @@ export class DocGenerator {
                 if (definitions) {
                     apiSpec.components!.schemas = {
                         ...apiSpec.components!.schemas,
-                        ...definitions as any
+                        ...(definitions as any)
                     };
                 }
 
@@ -406,7 +404,6 @@ export class DocGenerator {
             }
 
             for (let method of endpointMethods) {
-
                 // Skip private methods
                 if (method.hasModifier(SyntaxKind.PrivateKeyword)) {
                     continue;
@@ -428,7 +425,10 @@ export class DocGenerator {
     }
 
     private static _getTypeString(type: Type): string {
-        return type.getNonNullableType().getText().replace(/Promise<(.+?)>/g, "$1");
+        return type
+            .getNonNullableType()
+            .getText()
+            .replace(/Promise<(.+?)>/g, "$1");
     }
 
     private static _isNilType(type: Type): boolean {
@@ -437,7 +437,6 @@ export class DocGenerator {
     }
 
     private static _generateTypeDefinition(type: Type, ignoreNil: boolean = true): string | undefined {
-
         if (ignoreNil && DocGenerator._isNilType(type)) {
             return;
         }
@@ -466,9 +465,6 @@ export class DocGenerator {
     }
 
     private static _createHash(value: any): string {
-        return crypto
-            .createHash("sha256")
-            .update(value)
-            .digest("hex");
+        return crypto.createHash("sha256").update(value).digest("hex");
     }
 }

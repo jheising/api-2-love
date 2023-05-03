@@ -20,15 +20,17 @@ import cors from "cors";
 import wcmatch from "wildcard-match";
 import {
     API2LoveResponse,
-    API2LoveRoute, FriendlyAPIResponseFailure, FriendlyAPIResponseSuccess,
+    API2LoveRoute,
+    FriendlyAPIResponseFailure,
+    FriendlyAPIResponseSuccess,
     InputParameterRequirements,
     ManagedAPIHandler,
-    ManagedAPIHandlerConfig, ResponseFormatter
+    ManagedAPIHandlerConfig,
+    ResponseFormatter
 } from "./Types";
 import type { InfoObject } from "openapi3-ts/src/model/openapi31";
 
 export interface API2LoveConfig {
-
     info?: InfoObject;
 
     /**
@@ -82,7 +84,6 @@ export interface APIFriendlyError extends Error {
 }
 
 export class API2Love {
-
     readonly handler?: APIGatewayProxyHandler;
     readonly app?: Express;
     readonly server?: Server;
@@ -100,12 +101,11 @@ export class API2Love {
     }
 
     constructor(config: API2LoveConfig = {}) {
-
         config = API2Love._initializeConfig(config);
 
         this.config = config;
 
-        log.setLevel(process.env.LOG_LEVEL as any ?? "error");
+        log.setLevel((process.env.LOG_LEVEL as any) ?? "error");
 
         const packageInfo = require("../package.json");
 
@@ -115,7 +115,6 @@ export class API2Love {
 
         // Create our contextual logger
         this.app.use((req, res, next) => {
-
             const context = {
                 method: req.method,
                 url: req.url
@@ -129,7 +128,6 @@ export class API2Love {
             res.locals.logger = requestLogger;
 
             res.once("finish", () => {
-
                 requestLogger.debug({ statusCode: res.statusCode });
 
                 //log.debug(req.method, req.url, res.statusCode);
@@ -144,19 +142,23 @@ export class API2Love {
 
         if (config.corsWhitelist) {
             const isMatch = wcmatch(config.corsWhitelist);
-            this.app.use(cors({
-                origin: (requestOrigin, callback) => {
-                    const isAllowedOrigin = !!requestOrigin && isMatch(requestOrigin);
-                    callback(null, isAllowedOrigin);
-                }
-            }));
+            this.app.use(
+                cors({
+                    origin: (requestOrigin, callback) => {
+                        const isAllowedOrigin = !!requestOrigin && isMatch(requestOrigin);
+                        callback(null, isAllowedOrigin);
+                    }
+                })
+            );
         }
 
         if (config.loadStandardMiddleware) {
             this.app.use(cookieParser());
-            this.app.use(bodyParser.urlencoded({
-                extended: true
-            }));
+            this.app.use(
+                bodyParser.urlencoded({
+                    extended: true
+                })
+            );
             this.app.use(bodyParser.json());
             this.app.use(bodyParser.text());
         }
@@ -271,7 +273,6 @@ export class API2Love {
     }
 
     private static _getManagedHandler(theObject: any, httpMethod: string): ManagedAPIHandler | undefined {
-
         // Is there a key on this object that contains the
         const handler = theObject[httpMethod.toLowerCase()] ?? theObject[httpMethod.toUpperCase()];
 
@@ -300,7 +301,6 @@ export class API2Love {
         }
 
         if (handlerFunction) {
-
             if (!handlerConfig) {
                 handlerConfig = {};
             }
@@ -314,14 +314,16 @@ export class API2Love {
         let originalFactory = newLogger.methodFactory;
         newLogger.methodFactory = (methodName, logLevel, loggerName) => {
             let rawMethod = originalFactory(methodName, logLevel, loggerName);
-            return function() {
+            return function () {
                 const argData = Array.from(arguments);
-                rawMethod(JSON.stringify({
-                    time: new Date().toISOString(),
-                    level: methodName,
-                    ...contextData,
-                    message: argData
-                }));
+                rawMethod(
+                    JSON.stringify({
+                        time: new Date().toISOString(),
+                        level: methodName,
+                        ...contextData,
+                        message: argData
+                    })
+                );
             };
         };
         newLogger.setLevel(newLogger.getLevel());
@@ -330,7 +332,6 @@ export class API2Love {
 
     private _defaultResponseFormatter = (response: any, statusCode: number): FriendlyAPIResponseSuccess | FriendlyAPIResponseFailure => {
         if (statusCode <= 299) {
-
             if (this.config?.returnFriendlyResponses === false) {
                 return response;
             }
@@ -339,7 +340,6 @@ export class API2Love {
                 this: "succeeded",
                 with: response
             };
-
         } else {
             return {
                 this: "failed",
@@ -348,7 +348,6 @@ export class API2Love {
             };
         }
     };
-
 
     private _sendResponse(res: Response, response: any, statusCode: number = 200, responseFormatter: ResponseFormatter = this._defaultResponseFormatter) {
         const formattedResponse = responseFormatter(response, statusCode);
@@ -375,7 +374,11 @@ export class API2Love {
                 response: res
             };
 
-            const inputSourcePaths = requirement.sources ?? [["request", "params", paramName], ["request", "query", paramName], ["request", "body", paramName]];
+            const inputSourcePaths = requirement.sources ?? [
+                ["request", "params", paramName],
+                ["request", "query", paramName],
+                ["request", "body", paramName]
+            ];
             const foundPath = inputSourcePaths.find(path => has(inputSource, path));
 
             if (foundPath) {
@@ -403,7 +406,6 @@ export class API2Love {
 
     private async _handleRequest(handler: ManagedAPIHandler, req: Request, res: API2LoveResponse, next: NextFunction) {
         try {
-
             let result;
             let [handlerConfig, handlerFunction] = handler;
 

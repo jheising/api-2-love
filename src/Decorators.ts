@@ -1,6 +1,6 @@
-import {Utils} from "./Utils";
+import { Utils } from "./Utils";
 import castArray from "lodash/castArray";
-import {API2LoveRequestHandler, InputParameterRequirement, ResponseFormatter} from "./Types";
+import { API2LoveRequestHandler, InputParameterRequirement, ResponseFormatter } from "./Types";
 import { OperationObject } from "openapi3-ts/src/model/openapi31";
 
 export const Post = Utils.generateHTTPMethodDecorator("POST");
@@ -14,7 +14,7 @@ export const Trace = Utils.generateHTTPMethodDecorator("TRACE");
 
 export const Param = (requirements: InputParameterRequirement) => {
     return Utils.generateParameterDecorator(requirements);
-}
+};
 
 export const Body = Utils.generateParameterSourceDecorator(["request", "body"]);
 export const AllBody = Utils.generateParameterSourceDecorator(["request", "body"], true, false);
@@ -49,21 +49,21 @@ export const FormatResponse = (formatter: ResponseFormatter, contentType?: strin
         responseFormatter: formatter,
         responseContentType: contentType
     });
-}
+};
 
 export const Use = (middleware: API2LoveRequestHandler | API2LoveRequestHandler[]) => {
     return Utils.generateMethodDecorator({
         middleware: castArray(middleware)
     });
-}
+};
 
 /**
  * Specify OpenAPI operation documentation for this object. Any values here will overrule those auto-generated
  * @param openAPIDocs
  * @constructor
  */
-export const Docs = (openAPIDocs:Partial<OperationObject>) => {
+export const Docs = (openAPIDocs: Partial<OperationObject>) => {
     return Utils.generateMethodDecorator({
         docs: openAPIDocs
     });
-}
+};

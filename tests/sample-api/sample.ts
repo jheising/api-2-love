@@ -5,11 +5,10 @@ export default class SampleAPI {
     @Get
     static postWithPartialBody(
         @Body
-            bodyParam1: string,
+        bodyParam1: string,
         @Body
-            bodyParam2: number = 5,
+        bodyParam2: number = 5,
         @Body
-            bodyParam3?: Person
-    ) {
-    }
+        bodyParam3?: Person
+    ) {}
 }

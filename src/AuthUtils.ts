@@ -1,13 +1,12 @@
-import {RequestHandler, Response} from "express/ts4.0";
-import jwt, {JwtPayload} from "jsonwebtoken";
+import { RequestHandler, Response } from "express/ts4.0";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import castArray from "lodash/castArray";
-import {API2Love} from "./API2Love";
+import { API2Love } from "./API2Love";
 import JwksRsa from "jwks-rsa";
-import {Utils} from "./Utils";
+import { Utils } from "./Utils";
 import crypto from "crypto";
 
-export interface API2LoveAuthMiddlewareConfig {
-}
+export interface API2LoveAuthMiddlewareConfig {}
 
 export interface APIKeyMiddlewareConfig extends API2LoveAuthMiddlewareConfig {
     apiKeys: string | string[];
@@ -29,7 +28,6 @@ export interface JWTMiddlewareConfig extends API2LoveAuthMiddlewareConfig {
 }
 
 export class API2LoveAuth {
-
     static TMP_API_KEY_PREFIX = "tmp_";
 
     private static _initializeAuthResponse(res: Response) {
@@ -42,26 +40,17 @@ export class API2LoveAuth {
         return crypto.createHash("sha256").update(plaintext).digest("hex");
     }
 
-    static generateTemporaryAPIKey(
-        rootAPIKey: string,
-        expirationInSeconds: number = 300
-    ): string {
-        const expirationTimeString = Math.round(
-            Date.now() / 1000 + expirationInSeconds
-        ).toString();
+    static generateTemporaryAPIKey(rootAPIKey: string, expirationInSeconds: number = 300): string {
+        const expirationTimeString = Math.round(Date.now() / 1000 + expirationInSeconds).toString();
         return API2LoveAuth.TMP_API_KEY_PREFIX + API2LoveAuth.createSHA256Hash(`${rootAPIKey}${expirationTimeString}`) + ":" + expirationTimeString;
     }
 
     static isValidTemporaryAPIKey(tempAPIKey: string, rootAPIKey: string): boolean {
-
         tempAPIKey = tempAPIKey.replace(API2LoveAuth.TMP_API_KEY_PREFIX, "");
         const [tokenHash, expirationInSecondsString] = tempAPIKey.split(":");
         const currentTimeInSeconds = Math.round(Date.now() / 1000);
 
-        if (
-            Number(expirationInSecondsString) <= currentTimeInSeconds ||
-            tokenHash !== API2LoveAuth.createSHA256Hash(rootAPIKey + expirationInSecondsString)
-        ) {
+        if (Number(expirationInSecondsString) <= currentTimeInSeconds || tokenHash !== API2LoveAuth.createSHA256Hash(rootAPIKey + expirationInSecondsString)) {
             return false;
         }
 
@@ -69,16 +58,13 @@ export class API2LoveAuth {
     }
 
     static APIKeyMiddleware(config: APIKeyMiddlewareConfig): RequestHandler {
-
         const apiKeys = castArray(config.apiKeys);
 
         return (req, res, next) => {
-
             let isValidKey = false;
             const apiKey = req.get(config.headerName ?? "X-API-KEY");
 
             if (apiKey) {
-
                 // Does this API key exist in the key list?
                 isValidKey = apiKeys.includes(apiKey);
 
@@ -105,8 +91,12 @@ export class API2LoveAuth {
 
     private static _jwksClients: { [iss: string]: JwksRsa.JwksClient } = {};
 
-    static async verifyJWT<PayloadType extends JwtPayload = JwtPayload>(jwtString: string, allowedIssuers: string[], ignoreExpiration: boolean = false, throwError: boolean = true): Promise<PayloadType | undefined> {
-
+    static async verifyJWT<PayloadType extends JwtPayload = JwtPayload>(
+        jwtString: string,
+        allowedIssuers: string[],
+        ignoreExpiration: boolean = false,
+        throwError: boolean = true
+    ): Promise<PayloadType | undefined> {
         let unverifiedPayload: JwtPayload;
         try {
             unverifiedPayload = jwt.decode(jwtString) as any;
@@ -152,19 +142,24 @@ export class API2LoveAuth {
 
         try {
             return await new Promise((resolve, reject) => {
-                jwt.verify(jwtString, async (header, callback) => {
-                    const key = await client.getSigningKey(header.kid);
-                    const publicKey = key.getPublicKey();
-                    callback(null, publicKey);
-                }, {
-                    ignoreExpiration: ignoreExpiration
-                }, (err, decoded) => {
-                    if (err) {
-                        reject(err);
-                        return;
+                jwt.verify(
+                    jwtString,
+                    async (header, callback) => {
+                        const key = await client.getSigningKey(header.kid);
+                        const publicKey = key.getPublicKey();
+                        callback(null, publicKey);
+                    },
+                    {
+                        ignoreExpiration: ignoreExpiration
+                    },
+                    (err, decoded) => {
+                        if (err) {
+                            reject(err);
+                            return;
+                        }
+                        resolve(decoded as any);
                     }
-                    resolve(decoded as any);
-                });
+                );
             });
         } catch (e: any) {
             if (throwError) {
@@ -178,7 +173,6 @@ export class API2LoveAuth {
         return async (req, res, next) => {
             let jwtString = req.get("Authorization");
             if (jwtString) {
-
                 jwtString = jwtString.replace("Bearer ", "");
 
                 try {
@@ -205,10 +199,10 @@ export const UseAPIKeyAuth = (config: APIKeyMiddlewareConfig) => {
     return Utils.generateMethodDecorator({
         middleware: castArray(API2LoveAuth.APIKeyMiddleware(config))
     });
-}
+};
 
 export const UseJWTAuth = (config: JWTMiddlewareConfig) => {
     return Utils.generateMethodDecorator({
         middleware: castArray(API2LoveAuth.JWTMiddleware(config))
     });
-}
+};

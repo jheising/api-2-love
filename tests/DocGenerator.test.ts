@@ -2,7 +2,6 @@ import { DocGenerator } from "../src/docgen/DocGenerator";
 
 describe("DocGenerator", () => {
     it("Should generate docs for a sample API", async () => {
-
         const info = {
             title: "Test API",
             version: "1.0.0"

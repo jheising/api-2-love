@@ -7,9 +7,9 @@ export default class SampleAPIWithPathParams {
         pathParam1: string,
         pathParam2: string,
         @Header
-            headerParam: string,
+        headerParam: string,
         @Cookie
-            cookieParam: string
+        cookieParam: string
     ): Persons {
         return [];
     }
@@ -30,9 +30,9 @@ export default class SampleAPIWithPathParams {
         pathParam1: string,
         pathParam2: string,
         @Request
-            req: any,
+        req: any,
         @Optional
-            optionalParam1: string,
+        optionalParam1: string,
         optionalParam2?: string
     ): Promise<Person> {
         return {
@@ -46,19 +46,13 @@ export default class SampleAPIWithPathParams {
         pathParam1: string,
         pathParam2: string,
         @WholeBody
-            person: Person
+        person: Person
     ): Persons {
         return [];
     }
 
-
     @Put
-    private static privateEndpoint1(
-        pathParam1: string,
-        pathParam2: string
-    ) {
-
-    }
+    private static privateEndpoint1(pathParam1: string, pathParam2: string) {}
 
     /**
      * @private
@@ -66,10 +60,5 @@ export default class SampleAPIWithPathParams {
      * @param pathParam2
      */
     @Options
-    static privateEndpoint2(
-        pathParam1: string,
-        pathParam2: string
-    ) {
-
-    }
+    static privateEndpoint2(pathParam1: string, pathParam2: string) {}
 }

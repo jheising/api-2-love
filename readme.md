@@ -15,7 +15,7 @@ You may also install `ts-node` or `ts-node-dev` to make local development easier
 First create a file in the root of your project called `server.ts`, then add the following lines:
 
 ```typescript
-import {API2Love} from "api-2-love";
+import { API2Love } from "api-2-love";
 
 exports.handler = new API2Love().handler;
 ```
@@ -53,15 +53,15 @@ Here is a simple example:
 
 ```typescript
 //  From ./api/orders/[orderID]/index.ts
-import {Path, Query, Optional} from "api-2-love";
+import { Path, Query, Optional } from "api-2-love";
 
 export default class OrderAPI {
     static async getOrderByID(
         @Path // This means the variable named orderID will be pulled from the path of the route
-            orderID: string,
+        orderID: string,
         @Query // This means the variable named verbose will be pulled from a query parameter
         @Optional // By default, all variables are required and will return an error if not specified. This denotes that this variable is optional.
-            verbose?: boolean
+        verbose?: boolean
     ) {
         return MyOrderSystem.getOrderByID(orderID, verbose);
     }
