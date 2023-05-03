@@ -148,3 +148,5 @@ lib
 .idea
 
 .husky
+
+build

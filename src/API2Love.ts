@@ -14,7 +14,7 @@ import get from "lodash/get";
 import has from "lodash/has";
 import isNil from "lodash/isNil";
 import isArray from "lodash/isArray";
-import { Utils } from "./Utils";
+import { Route, Utils } from "./Utils";
 import { ErrorRequestHandler } from "express-serve-static-core";
 import cors from "cors";
 import wcmatch from "wildcard-match";
@@ -29,6 +29,10 @@ import {
     ResponseFormatter
 } from "./Types";
 import type { InfoObject } from "openapi3-ts/src/model/openapi31";
+
+interface ExtendedRoute extends Route {
+    import?: () => Promise<any>;
+}
 
 export interface API2LoveConfig {
     info?: InfoObject;
@@ -163,7 +167,7 @@ export class API2Love {
             this.app.use(bodyParser.text());
         }
 
-        let apiRoutes = config.routes;
+        let apiRoutes = config.routes as ExtendedRoute[];
 
         // If routes aren't directly specified, then we can use file-system routing
         if (!apiRoutes) {
@@ -180,9 +184,9 @@ export class API2Love {
         for (let route of apiRoutes) {
             apiRouter.all(route.endpoint, async (req, res, next) => {
                 // Lazy load the route code
-                let module = require(route.file);
+                let module = route.import ? await route.import() : route.file ? require(route.file) : undefined;
 
-                if (module.default) {
+                if (module?.default) {
                     module = module.default;
                 }
 

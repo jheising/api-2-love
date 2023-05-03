@@ -48,4 +48,5 @@ export interface API2LoveRequestLocals {
 export type API2LoveRequest = Request<any, any, any, any, API2LoveRequestLocals>;
 export type API2LoveResponse = Response<any, API2LoveRequestLocals>;
 export type API2LoveRequestHandler = RequestHandler<any, any, any, any, API2LoveRequestLocals>;
+
 export type API2LoveRoute = Route;

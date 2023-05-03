@@ -385,6 +385,10 @@ export class DocGenerator {
 
     private static _forEachEndpoint(routes: Route[], predicate: (route: Route, method: MethodDeclaration, httpMethodName: string, sourceFile: SourceFile) => void) {
         for (let route of routes) {
+            if (!route.file) {
+                continue;
+            }
+
             const sourceFile = docProject.getSourceFile(route.file);
 
             if (!sourceFile) {

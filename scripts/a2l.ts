@@ -7,6 +7,7 @@ import { spawn } from "child_process";
 import path from "path";
 import { API2LoveConfig } from "../src";
 import { Utils } from "../src/Utils";
+import { build } from "./build";
 
 const { program } = require("commander");
 
@@ -25,21 +26,12 @@ program
         });
     });
 
-// program.command("build")
-//     .option("-a --apiDirectory <string>", "the root folder of your API directory", "./api")
-//     .action(async (options: any) => {
-//         const child = spawn("node_modules/.bin/ts-node-dev",
-//             ["--watch", "./**/*.ts", "--ignore-watch", "node_modules/*", "--transpile-only", path.resolve(__dirname, "dev-server")],
-//             {
-//                 stdio: "inherit",
-//                 env: {
-//                     ...process.env,
-//                     API_ROOT: options.apiDirectory,
-//                     API_PORT: options.port,
-//                     LOG_LEVEL: "debug"
-//                 }
-//             });
-//     });
+program
+    .command("build")
+    .option("-c --config <string>", "the location of your api.config.ts or api.config.js file", "./api.config.js")
+    .action(async (options: any) => {
+        await build(options.config);
+    });
 
 program
     .command("generate:docs")
